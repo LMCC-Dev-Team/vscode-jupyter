@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
+import { applyManagedKernelEnvironment } from '../../../standalone/api/lmcc';
 import { logger } from '../../../platform/logging';
 import { getDisplayPath } from '../../../platform/common/platform/fs-paths';
 import { IConfigurationService, Resource, type ReadWrite } from '../../../platform/common/types';
@@ -145,7 +146,7 @@ export class KernelEnvironmentVariablesService {
             mergedVars[key] = substituteEnvVars(key, value, mergedVars);
         }
 
-        return mergedVars;
+        return applyManagedKernelEnvironment(resource, interpreter?.uri, mergedVars);
     }
 }
 

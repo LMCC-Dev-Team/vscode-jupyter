@@ -4,6 +4,7 @@
 import { Event, EventEmitter, QuickInputButton, QuickPick, QuickPickItem, QuickPickItemButtonEvent } from 'vscode';
 
 export class MockQuickPick implements QuickPick<QuickPickItem> {
+    prompt: string | undefined;
     public value: string = '';
     public placeholder: string | undefined;
     public title: string | undefined = 'foo';

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { ExtensionMode, Uri } from 'vscode';
+import { createLmccRuntimeApi, LmccRuntimeApi } from './lmcc';
 import { PythonApi } from '../../platform/api/types';
 import { isTestExecution } from '../../platform/common/constants';
 import { IExtensionContext, IExtensions } from '../../platform/common/types';
@@ -25,7 +26,9 @@ import { INotebookPythonEnvironmentService } from '../../notebooks/types';
  * This is the public API for other extensions to interact with this extension.
  */
 
-export interface IExtensionApi extends Jupyter {}
+export interface IExtensionApi extends Jupyter {
+    readonly lmcc?: LmccRuntimeApi;
+}
 
 export function buildApi(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,6 +40,7 @@ export function buildApi(
     const extensions = serviceContainer.get<IExtensions>(IExtensions);
     const envApi = serviceContainer.get<INotebookPythonEnvironmentService>(INotebookPythonEnvironmentService);
     const api: IExtensionApi = {
+        lmcc: createLmccRuntimeApi(serviceContainer),
         // 'ready' will propagate the exception, but we must log it here first.
         ready: getReady(ready),
         registerPythonApi: (pythonApi: PythonApi) => registerPythonApi(pythonApi, serviceContainer),

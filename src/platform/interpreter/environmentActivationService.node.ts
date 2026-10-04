@@ -20,7 +20,8 @@ import { ignoreLogging, logValue, debugDecorator, logger } from '../logging';
 import { TraceOptions } from '../logging/types';
 import { GlobalPythonExecutablePathService } from './globalPythonExePathService.node';
 import { noop } from '../common/utils/misc';
-import { CancellationToken, workspace } from 'vscode';
+import { CancellationToken, Uri, workspace } from 'vscode';
+import { applyManagedKernelEnvironment } from '../../standalone/api/lmcc';
 import { raceCancellation } from '../common/cancellation';
 import { getEnvironmentType, getPythonEnvDisplayName, getSysPrefix, isCondaEnvironmentWithoutPython } from './helpers';
 import { Environment } from '@vscode/python-extension';
@@ -59,6 +60,11 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         interpreter: { id: string },
         token?: CancellationToken
     ): Promise<NodeJS.ProcessEnv | undefined> {
+        if (workspace.getConfiguration('jupyter').get<string>('lmccRuntimeProvider')) {
+            // Portable LMCC runtimes need no shell activation or global interpreter discovery.
+            // Discovery may be unavailable in an offline, standalone notebook window.
+            return applyManagedKernelEnvironment(resource, Uri.file(interpreter.id), process.env);
+        }
         const title = DataScience.activatingPythonEnvironment(getPythonEnvDisplayName(interpreter));
         return KernelProgressReporter.wrapAndReportProgress(resource, title, async () =>
             this.getActivatedEnvironmentVariablesImplWithCaching(resource, interpreter.id, token)

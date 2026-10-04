@@ -310,9 +310,13 @@ class PythonKernelInterrupter:
         )
         child_proc_handle.Close()
         parent_proc_handle.Close()
-        self.interrupt_handles[dupe_handle.value] = interrupt_handle
+        # This handle belongs to the extension host, not this Python process.
+        # Closing its numeric value here can close an unrelated local handle
+        # (including stdin), leaving later kernel/interrupt requests hanging.
+        parent_handle = dupe_handle.Detach()
+        self.interrupt_handles[parent_handle] = interrupt_handle
 
-        return dupe_handle.value
+        return parent_handle
 
 
 def main():

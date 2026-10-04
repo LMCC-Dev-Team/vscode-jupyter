@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+import { checkManagedRuntime } from '../../standalone/api/lmcc';
 import {
     CancellationError,
     commands,
@@ -382,6 +383,19 @@ export class VSCodeNotebookController implements Disposable, IVSCodeNotebookCont
         // When we receive a cell execute request, first ensure that the notebook is trusted.
         // If it isn't already trusted, block execution until the user trusts it.
         if (!workspace.isTrusted) {
+            return;
+        }
+        try {
+            await checkManagedRuntime(notebook, this.connection);
+        } catch (error) {
+            logger.error('Managed notebook runtime rejected execution', error);
+            const controller = new KernelController(this.controller);
+            const message = error instanceof Error ? error.message : String(error);
+            for (const cell of cells) {
+                this.createCellExecutionIfNecessary(cell, controller).start();
+                await endCellAndDisplayErrorsInCell(cell, controller, message, false);
+            }
+            telemetryTracker?.stop();
             return;
         }
         logger.debug(`Handle Execution of Cells ${cells.map((c) => c.index)} for ${getDisplayPath(notebook.uri)}`);

@@ -7,7 +7,7 @@ import { EnvironmentType, PythonEnvironment } from '../../../platform/pythonEnvi
 import { inject, injectable } from 'inversify';
 import { IDisposableRegistry, IExtensionContext, Resource, type IDisposable } from '../../../platform/common/types';
 import { createDeferred, Deferred } from '../../../platform/common/utils/async';
-import { Disposable, Uri } from 'vscode';
+import { Disposable, Uri, workspace } from 'vscode';
 import { EOL } from 'os';
 import { swallowExceptions } from '../../../platform/common/utils/misc';
 import { splitLines } from '../../../platform/common/helpers';
@@ -114,6 +114,9 @@ export class PythonKernelInterruptDaemon {
     }
 
     private async getInterpreter(interpreter: PythonEnvironment) {
+        if (workspace.getConfiguration('jupyter').get<string>('lmccRuntimeProvider')) {
+            return interpreter;
+        }
         if (interpreter && isBestPythonInterpreterForAnInterruptDaemon(interpreter)) {
             return interpreter;
         }
